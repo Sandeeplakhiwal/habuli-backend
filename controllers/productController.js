@@ -142,7 +142,6 @@ export const addOrUpdateReview = catchAsyncError(async (req, res, next) => {
 export const getProductAllReviews = catchAsyncError(async (req, res, next) => {
   const productId = req.params.id;
   if (!productId) return next(new ErrorHandler("ProductId is required", 400));
-  console.log("Product reviews", productId);
   const product = await Product.findById(productId);
   if (!product)
     return next(
