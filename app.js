@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import ErrorMiddleware from "./middleware/error.js";
 import cookieParser from "cookie-parser";
+import Cors from "cors";
 
 const app = express();
 
@@ -12,6 +13,13 @@ dotenv.config({
 // Using Middlewares
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  Cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
 
 app.get("/", (req, res) => {
   res.send("Sandeep Lakhiwal");
