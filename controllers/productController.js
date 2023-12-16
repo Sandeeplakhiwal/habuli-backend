@@ -121,12 +121,12 @@ export const addOrUpdateReview = catchAsyncError(async (req, res, next) => {
     product.reviews.push(review);
   }
 
-  let avg = 0;
+  let ratingsSum = 0;
+  product.reviews.forEach((rev) => {
+    ratingsSum += rev.rating;
+  });
 
-  product.ratings =
-    product.reviews.forEach((rev) => {
-      avg += rev.rating;
-    }) / product.reviews.length;
+  product.ratings = ratingsSum / product.reviews.length;
 
   product.numOfReviews = product.reviews.length;
 
