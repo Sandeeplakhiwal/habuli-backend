@@ -17,7 +17,7 @@ const router = Router();
 router.post("/product/new", isAuthenticated, authoriseAdmin, createProduct);
 
 // Get All Products
-router.get("/products", isAuthenticated, getAllProducts);
+router.get("/products", getAllProducts);
 
 // Update Product --Admin
 router.put("/product/:id", isAuthenticated, authoriseAdmin, updateProduct);
@@ -32,7 +32,7 @@ router.get("/product/:id", getProductDetails);
 router.post("/product/reviews/:id", isAuthenticated, addOrUpdateReview);
 
 // Get Product Reviews
-router.get("/product/reviews/:id", isAuthenticated, getProductAllReviews);
+router.get("/product/reviews/:id", getProductAllReviews);
 
 // Delete User Own Product Review
 router.delete("/product/reviews/:id", isAuthenticated, deleteMyReview);
