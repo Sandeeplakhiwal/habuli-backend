@@ -12,14 +12,13 @@ export class ApiFeatures {
           },
         }
       : {};
-    console.log("Keyword", keyword);
+
     this.query = this.query.find({ ...keyword });
     return this;
   }
 
   filter() {
     const queryCopy = { ...this.queryStr };
-    console.log("Before", queryCopy);
 
     // Removing some field for category
     const removeFields = ["keyword", "page", "limit"];
@@ -27,7 +26,7 @@ export class ApiFeatures {
     // Filter for price and rating
     let queryStr = JSON.stringify(queryCopy);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (key) => `$${key}`);
-    console.log(JSON.parse(queryStr));
+
     this.query = this.query.find(JSON.parse(queryStr));
     return this;
   }

@@ -60,7 +60,9 @@ export const getSingleOrder = catchAsyncError(async (req, res, next) => {
 
 // Get Logged In User Orders
 export const myOrders = catchAsyncError(async (req, res, next) => {
-  const orders = await Order.find({ user: req.user._id });
+  const orders = await Order.find({ user: req.user._id }).populate(
+    "orderItems.product"
+  );
   return res.status(200).json({
     success: true,
     orders,
@@ -139,3 +141,91 @@ export const check = catchAsyncError(async (req, res, next) => {
     product,
   });
 });
+
+// Get CartItems
+// Assuming catchAsyncError is a middleware for handling async errors
+export const getCartProductsAndPrice = catchAsyncError(
+  async (req, res, next) => {
+    try {
+      let cartItems = req.query.items;
+      let productIds = [];
+
+      // Check if cartItems is provided
+      if (!cartItems) {
+        return res.status(400).json({
+          success: false,
+          message: "CartItems are required",
+        });
+      }
+
+      // Parse cartItems
+      cartItems = JSON.parse(cartItems);
+
+      // Extract productIds from cartItems
+      cartItems.forEach((item) => {
+        if (item._id) {
+          productIds.push(item._id);
+        }
+      });
+
+      // Check if productIds are present
+      if (!productIds.length) {
+        return res.status(400).json({
+          success: false,
+          message: "Valid Product IDs are required in CartItems",
+        });
+      }
+
+      // Fetch products based on productIds
+      const products = await Product.find({
+        _id: { $in: productIds },
+      }).populate("user");
+
+      // Check if products are found
+      if (!products || products.length === 0) {
+        return next(new ErrorHandler("Products not found", 404));
+      }
+
+      // Calculate prices
+      const getItemQuantity = (id) => {
+        const item = cartItems.find(
+          (item) => item._id.toString() === id.toString()
+        );
+        return item?.quantity || 1;
+      };
+
+      const itemsPrice = products.reduce(
+        (total, product) =>
+          total + product.price * getItemQuantity(product._id),
+        0
+      );
+
+      const taxPrice = products.reduce(
+        (total, product) =>
+          total + product.price * getItemQuantity(product._id) * 0.05,
+        0
+      );
+
+      const shippingCharges = products.reduce(
+        (total, product) => total + (product.price > 1000 ? 0 : 200),
+        0
+      );
+
+      const totalAmount = itemsPrice + taxPrice + shippingCharges;
+
+      return res.status(200).json({
+        success: true,
+        products,
+        prices: {
+          itemsPrice,
+          taxPrice,
+          shippingCharges,
+          totalAmount,
+        },
+      });
+    } catch (error) {
+      // Handle any asynchronous errors
+      next(error);
+    }
+  }
+);

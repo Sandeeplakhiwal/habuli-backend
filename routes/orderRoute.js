@@ -3,6 +3,7 @@ import {
   check,
   deleteOrder,
   getAllOrders,
+  getCartProductsAndPrice,
   getSingleOrder,
   myOrders,
   newOrder,
@@ -33,5 +34,7 @@ router.delete("/admin/order/:id", isAuthenticated, authoriseAdmin, deleteOrder);
 
 // Check
 router.get("/check/:id", check);
+
+router.get("/cartitems", isAuthenticated, getCartProductsAndPrice);
 
 export default router;
