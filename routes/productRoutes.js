@@ -7,14 +7,25 @@ import {
   getAllProducts,
   getProductAllReviews,
   getProductDetails,
+  testProduct,
   updateProduct,
 } from "../controllers/productController.js";
 import { authoriseAdmin, isAuthenticated } from "../middleware/auth.js";
+import multer from "multer";
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 const router = Router();
 
 // Create Product --Admin
-router.post("/product/new", isAuthenticated, authoriseAdmin, createProduct);
+router.post(
+  "/product/new",
+  isAuthenticated,
+  authoriseAdmin,
+  upload.single("image"),
+  createProduct
+);
 
 // Get All Products
 router.get("/products", getAllProducts);
@@ -36,5 +47,9 @@ router.get("/product/reviews/:id", getProductAllReviews);
 
 // Delete User Own Product Review
 router.delete("/product/reviews/:id", isAuthenticated, deleteMyReview);
+
+// Test
+
+router.post("/testproduct", upload.single("image"), testProduct);
 
 export default router;

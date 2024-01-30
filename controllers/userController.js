@@ -163,10 +163,10 @@ export const updateUserProfile = catchAsyncError(async (req, res, next) => {
   const { name, email } = req.body;
   // We will add cloudinary later
   if (!name && !email) {
-    return next(new ErrorHandler("Please enter all fields"));
+    return next(new ErrorHandler("Please enter name or email"));
   }
   const user = await User.findByIdAndUpdate(
-    req.user.id,
+    req.user._id,
     { name, email },
     {
       new: true,

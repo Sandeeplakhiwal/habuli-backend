@@ -2,17 +2,75 @@ import { Product } from "../models/productModel.js";
 import ErrorHandler from "../utils/errorhandler.js";
 import { catchAsyncError } from "../middleware/catchAsyncError.js";
 import { ApiFeatures } from "../utils/apiFeatures.js";
-import { User } from "../models/userModel.js";
+import cloudinary from "cloudinary";
+import { createWriteStream } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
 // Create product
 export const createProduct = catchAsyncError(async (req, res, next) => {
-  const data = req.body;
-  data.user = req.user._id;
-  const product = await Product.create(data);
+  const { name, description, price, category, stock } = req.body;
+  if (!name || !description || !price || !category || !stock) {
+    return res.status(400).json({
+      success: false,
+      message: "Please fill all required fields",
+    });
+  }
+
+  if (!req.file) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please add product image" });
+  }
+
+  const tempFilePath = join(tmpdir(), `${Date.now()}-${req.file.originalname}`);
+  createWriteStream(tempFilePath).write(req.file.buffer);
+
+  console.log("check1");
+
+  const cloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+    folder: "products",
+  });
+
+  console.log("check2");
+
+  const productData = {
+    name,
+    description,
+    images: [
+      {
+        public_id: cloud ? cloud.public_id : "",
+        url: cloud ? cloud.url : "",
+      },
+    ],
+    price,
+    category,
+    stock,
+    user: req.user._id,
+  };
+  const product = await Product.create(productData);
   res.status(201).json({
     success: true,
     message: "Product created successfully",
     product,
+  });
+});
+
+export const testProduct = catchAsyncError(async (req, res, next) => {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No file uploaded" });
+  }
+  const fileData = req.file.buffer;
+  const cloud = await cloudinary.v2.uploader.upload(fileData, {
+    folder: "products",
+  });
+  console.log("name", req.body.name);
+  console.log(fileData);
+  res.status(200).json({
+    success: true,
+    cloud: cloud.public_id,
   });
 });
 
