@@ -23,6 +23,8 @@ app.use(
   })
 );
 
+console.log("okay");
+
 app.get("/", (req, res) => {
   res.send("Sandeep Lakhiwal");
 });
