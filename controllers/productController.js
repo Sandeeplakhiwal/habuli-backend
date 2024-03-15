@@ -99,10 +99,7 @@ export const getProductDetails = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Product not found", 404));
   }
 
-  res.status(200).json({
-    success: true,
-    product,
-  });
+  res.status(200).json({ product });
 });
 
 // Update Product -- Admin
