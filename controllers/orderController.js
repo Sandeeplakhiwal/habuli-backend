@@ -194,24 +194,30 @@ export const getCartProductsAndPrice = catchAsyncError(
         return item?.quantity || 1;
       };
 
-      const itemsPrice = products.reduce(
-        (total, product) =>
-          total + product.price * getItemQuantity(product._id),
-        0
+      const itemsPrice = Math.ceil(
+        products.reduce(
+          (total, product) =>
+            total + product.price * getItemQuantity(product._id),
+          0
+        )
       );
 
-      const taxPrice = products.reduce(
-        (total, product) =>
-          total + product.price * getItemQuantity(product._id) * 0.05,
-        0
+      const taxPrice = Math.ceil(
+        products.reduce(
+          (total, product) =>
+            total + product.price * getItemQuantity(product._id) * 0.05,
+          0
+        )
       );
 
-      const shippingCharges = products.reduce(
-        (total, product) => total + (product.price > 1000 ? 0 : 200),
-        0
+      const shippingCharges = Math.ceil(
+        products.reduce(
+          (total, product) => total + (product.price > 1000 ? 0 : 200),
+          0
+        )
       );
 
-      const totalAmount = itemsPrice + taxPrice + shippingCharges;
+      const totalAmount = Math.ceil(itemsPrice + taxPrice + shippingCharges);
 
       return res.status(200).json({
         success: true,
