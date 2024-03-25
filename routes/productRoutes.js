@@ -23,7 +23,7 @@ router.post(
   "/product/new",
   isAuthenticated,
   authoriseAdmin,
-  upload.single("image"),
+  upload.array("images", 4),
   createProduct
 );
 

@@ -4,8 +4,10 @@ import { catchAsyncError } from "../middleware/catchAsyncError.js";
 import { ApiFeatures } from "../utils/apiFeatures.js";
 import cloudinary from "cloudinary";
 import { createWriteStream } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import os from "os";
+import path from "path";
+import fs from "fs";
+import { Readable } from "stream";
 
 // Create product
 export const createProduct = catchAsyncError(async (req, res, next) => {
@@ -17,32 +19,51 @@ export const createProduct = catchAsyncError(async (req, res, next) => {
     });
   }
 
-  if (!req.file) {
+  if (req.files.length === 0) {
     return res
       .status(400)
-      .json({ success: false, message: "Please add product image" });
+      .json({ success: false, message: "Please add product images" });
   }
 
-  const tempFilePath = join(tmpdir(), `${Date.now()}-${req.file.originalname}`);
-  createWriteStream(tempFilePath).write(req.file.buffer);
+  const uploadPromises = req.files.map(async (file) => {
+    // Create a Readable stream from the Buffer
+    const bufferStream = new Readable();
+    bufferStream.push(file.buffer);
+    bufferStream.push(null); // Signals the end of the stream
 
-  console.log("check1");
+    // Create a temporary file path
+    const tempFilePath = path.join(os.tmpdir(), `${file.originalname}`);
 
-  const cloud = await cloudinary.v2.uploader.upload(tempFilePath, {
-    folder: "products",
+    // Create a WriteStream to write the Buffer data to the temporary file
+    const writeStream = fs.createWriteStream(tempFilePath);
+    bufferStream.pipe(writeStream);
+
+    // Wait for the stream to finish writing to the file
+    await new Promise((resolve, reject) => {
+      writeStream.on("finish", resolve);
+      writeStream.on("error", reject);
+    });
+
+    // Upload the temporary file to Cloudinary
+    const cloud = await cloudinary.v2.uploader.upload(tempFilePath, {
+      folder: "products",
+    });
+
+    // Delete the temporary file after upload
+    fs.unlinkSync(tempFilePath);
+
+    return {
+      public_id: cloud.public_id,
+      url: cloud.url,
+    };
   });
 
-  console.log("check2");
+  const uploadedImages = await Promise.all(uploadPromises);
 
   const productData = {
     name,
     description,
-    images: [
-      {
-        public_id: cloud ? cloud.public_id : "",
-        url: cloud ? cloud.url : "",
-      },
-    ],
+    images: uploadedImages,
     price,
     category,
     stock,
@@ -66,8 +87,6 @@ export const testProduct = catchAsyncError(async (req, res, next) => {
   const cloud = await cloudinary.v2.uploader.upload(fileData, {
     folder: "products",
   });
-  console.log("name", req.body.name);
-  console.log(fileData);
   res.status(200).json({
     success: true,
     cloud: cloud.public_id,
@@ -106,7 +125,6 @@ export const getProductDetails = catchAsyncError(async (req, res, next) => {
 export const updateProduct = catchAsyncError(async (req, res, next) => {
   const productId = req.params.id;
   let product = await Product.findById(productId);
-  console.log(productId);
   if (!product) {
     return next(new ErrorHandler("Product not found", 404));
   }
