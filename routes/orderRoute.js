@@ -35,6 +35,6 @@ router.delete("/admin/order/:id", isAuthenticated, authoriseAdmin, deleteOrder);
 // Check
 router.get("/check/:id", check);
 
-router.get("/cartitems", isAuthenticated, getCartProductsAndPrice);
+router.get("/cartitems", getCartProductsAndPrice);
 
 export default router;
